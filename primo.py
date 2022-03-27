@@ -11,6 +11,8 @@ website = {
     "www.trxs.org":"trxs",
     "jpxs123.org":"trxs",
     "www.jpxs123.org":"trxs",
+    "jpxs123.cc":"trxs",
+    "www.jpxs123.cc":"trxs",
     "powanjuan.cc":"powanjuan",
     "www.powanjuan.cc":"powanjuan",
     "ffxs8.com":"powanjuan",
@@ -19,7 +21,11 @@ website = {
     "www.sjks88.com":"sjks88",
     "novelfull.com":"novelfull",
     "www.novelfull.com":"novelfull",
-    "kolnovel.com":"kolnovel"
+    "kolnovel.com":"kolnovel",
+    "ranobes.net":"ranobes",
+    "www.ranobes.net":"ranobes",
+    "wuxiaworld.site":"wuxia",
+    "www.wuxiaworld.site":"wuxia"
 }
 
 class Accumulator:
@@ -44,7 +50,7 @@ class Accumulator:
                 self.site_module = importlib.import_module("modules." + website[url.netloc])
             except:
                 print("website not supported, Try another one")
-                sys.exit()
+                return False
 
             self.number = input("HOW MUCH CHAPTER(0=ALL CHAPTER): ")
             if not self.number :
@@ -148,11 +154,17 @@ class Accumulator:
                 try_counter = 0
                 while True and try_counter <= 3: 
                     try:
-                        self.downloader(self.chapters[i]["link"],"CHAPTER-" + str(i + 1),i + 1)
-                        break
+                        if self.downloader(self.chapters[i]["link"],"CHAPTER-" + str(i + 1),i + 1):
+                            break
+                        else:
+                            try_counter == 4
+                            break
                     except:
                         try_counter += 1
-
+                if try_counter == 4:
+                    print("error download chapters")
+                    time.sleep(3)
+                    sys.exit()
                 current_message = str(i + 1) + "/" + str(number_chapter_downloded)
                 sys.stdout.write(" " * (self.progress - 1) + "|" + current_message + " ")
                 sys.stdout.write("\b" * (self.progress + len(current_message) + 1))
@@ -167,8 +179,16 @@ class Accumulator:
             print(e)
     def downloader(self,url,chapter_name,current_loop):
         try:
-            results = self.site_module.get_content(url)
+            try_counter = 0
+            while True and try_counter <= 10: 
+                results = self.site_module.get_content(url)
+                if len(results) != 0:
+                    break
+                time.sleep(5)
+                try_counter += 1    
 
+            if try_counter == 11:
+                return False
             if self.single_file == "y":
                 self.single_txt += "----------------------------------\n"
                 self.single_txt += "CHAPTER-" + str(current_loop) + "\n\n"
@@ -194,13 +214,14 @@ class Accumulator:
                         new_file.write(results[i].text.strip() + '\n')
                 
                 new_file.close()
-            
+            return True
         except Exception as e:
             if self.type == "html":
                 os.remove(chapter_name +  + ".html") 
             else:
                 os.remove(chapter_name +  + ".txt") 
             print("ERROR HAPPEN IN " + chapter_name)
+            return False
     def progress_bar_header(self,message):
         toolbar_width = 50
         self.progress = 51
@@ -216,4 +237,4 @@ class Accumulator:
         self.progress -= 1
 Acc = Accumulator()
 Acc.light_novel()
-time.sleep(10)
+time.sleep(5)
