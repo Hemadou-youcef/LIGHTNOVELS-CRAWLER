@@ -37,14 +37,14 @@ def get_chapters(url):
 
     except Exception as e:
         print(e)
-def get_content(url):
+def get_content(url,session_request,end):
     try:
-        page = requests.get(url,headers=headers, timeout=10)
+        page = session_request.get(url,headers=headers, timeout=10)
         soup = BeautifulSoup(page.content, 'html5lib')
         for s in soup.select('#chapter-content div'):
             s.extract()
         results = soup.select('#chapter-content p')
 
-        return results[3:]
+        return results
     except:
         pass

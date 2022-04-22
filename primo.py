@@ -3,6 +3,7 @@ import os
 import time
 import importlib
 from urllib.parse import urlparse
+import requests
 
 website = {
     "trxs.cc":"trxs",
@@ -19,13 +20,33 @@ website = {
     "www.ffxs8.com":"powanjuan",
     "sjks88.com":"sjks88",
     "www.sjks88.com":"sjks88",
+    "sjks8.cc":"sjks88",
+    "www.sjks8.cc":"sjks88",
     "novelfull.com":"novelfull",
     "www.novelfull.com":"novelfull",
-    "kolnovel.com":"kolnovel",
     "ranobes.net":"ranobes",
     "www.ranobes.net":"ranobes",
     "wuxiaworld.site":"wuxia",
-    "www.wuxiaworld.site":"wuxia"
+    "www.wuxiaworld.site":"wuxia",
+    "kolnovel.com":"kolnovel",
+    "fanfiction.net":"fanfiction",
+    "www.fanfiction.net":"fanfiction",
+    "wattpad.com":"wattpad",
+    "www.wattpad.com":"wattpad",
+}
+lang = {
+    "zh-CN":[
+        "trxs.cc","www.trxs.cc","trxs.org","www.sjks88.com","sjks88.com","www.ffxs8.com","ffxs8.com",
+        "www.powanjuan.cc","powanjuan.cc","www.jpxs123.cc","jpxs123.cc","jpxs123.org","www.trxs.org","www.jpxs123.org",
+        "sjks8.cc","www.sjks8.cc"
+    ],
+    "en":[
+        "www.wuxiaworld.site","wuxiaworld.site","www.ranobes.net","ranobes.net","www.novelfull.com","novelfull.com",
+        "fanfiction.net","www.fanfiction.net","wattpad.com","www.wattpad.com"
+    ],
+    "ar":[
+        "kolnovel.com"
+    ]
 }
 
 class Accumulator:
@@ -44,10 +65,15 @@ class Accumulator:
                 if self.novel_url :
                     break
             self.suffix = ""
-           
+            
+            
             url = urlparse(self.novel_url)
             try:
                 self.site_module = importlib.import_module("modules." + website[url.netloc])
+                for x in lang.keys():
+                    if url.netloc in  lang[x]:
+                        self.lang = x
+                    
             except:
                 print("website not supported, Try another one")
                 return False
@@ -62,9 +88,11 @@ class Accumulator:
                 self.type="txt"
             if self.type == "txt":
                 self.single_file = input("SINGLE FILE??: (Y/N)(DEFAULT=N): ").lower()
-                if not self.type :
-                    self.type="n"
-
+                if not self.single_file :
+                    self.single_file="n"
+            else:
+                self.single_file="n"
+            
             
             
             header = open("required/header.txt", "r")
@@ -77,11 +105,14 @@ class Accumulator:
 
             style = open("required/style.css", "r")
             self.style = style.read()
+            if self.lang != "ar":
+                self.style.replace("rtl","ltr")
             style.close()
             
             #GET CHANPTER
             self.chapters = self.get_chapter()
-
+            if not bool(self.chapters):
+                sys.exit()
             #CREATING DOCUMENT FOR NOVEL
             self.document_creating()
             
@@ -101,9 +132,17 @@ class Accumulator:
     def get_chapter(self):
         print("GETTING CHAPTERS...")
         try:
-            return_values = self.site_module.get_chapters(self.novel_url)
-            self.novel_name = return_values[0]
-            return return_values[1]
+            try_counter = 0
+            while True and try_counter <= 10: 
+                return_values = self.site_module.get_chapters(self.novel_url)
+                if len(return_values[1]) != 0:
+                    self.novel_name = return_values[0]
+                    return return_values[1]
+                time.sleep(5)
+                try_counter += 1    
+            if try_counter == 11:
+                return False
+            
 
         except Exception as e:
             print("ERROR GETTING CHAPTERS")
@@ -114,6 +153,11 @@ class Accumulator:
             if not os.path.exists('downloads'):
                 os.mkdir('downloads')
             os.chdir('downloads')
+            
+            if not os.path.exists(self.lang):
+                os.mkdir(self.lang)
+            os.chdir(self.lang)
+            
             i = 2
             while True:
                 if os.path.exists(self.novel_name + self.suffix):
@@ -148,6 +192,7 @@ class Accumulator:
             current_message = "0/" + str(number_chapter_downloded)
             self.progress_bar_header(current_message)
             
+            self.session_requests = requests.Session()
             for i in range(number_chapter_downloded):
                 range_bar += range_bar_unit
 
@@ -179,9 +224,15 @@ class Accumulator:
             print(e)
     def downloader(self,url,chapter_name,current_loop):
         try:
+            end = False
+            if self.number == 0:
+                end = (len(self.chapters) == current_loop)
+            else:
+                end = (self.number == current_loop)
+
             try_counter = 0
             while True and try_counter <= 10: 
-                results = self.site_module.get_content(url)
+                results = self.site_module.get_content(url,self.session_requests,end)
                 if len(results) != 0:
                     break
                 time.sleep(5)
@@ -204,10 +255,9 @@ class Accumulator:
                     new_file.write(self.header)
                     new_file.write(navigation)
                     for i in range(len(results)):
-                        new_file.write( "<p>" + results[i].text + "</p>")
+                        new_file.write( "<p>" + results[i].text.strip() + "</p>")
                     new_file.write(navigation)
                     new_file.write(self.footer)
-                    self.previous = chapter_name + ".html"
                 else:
                     new_file = open(chapter_name + ".txt", "w",encoding="utf-8")
                     for i in range(len(results)):

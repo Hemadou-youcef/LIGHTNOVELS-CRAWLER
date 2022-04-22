@@ -31,10 +31,10 @@ def get_chapters(url):
 
     except Exception as e:
         pass
-def get_content(url):
+def get_content(url,session_request,end):
 
     try:
-        page = requests.get(url, timeout=10)
+        page = session_request.get(url, timeout=10)
         soup = BeautifulSoup(page.content, 'html5lib')
         # read_chapterDetail
         # content

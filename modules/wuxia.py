@@ -38,7 +38,7 @@ def get_chapters(url):
 
     except Exception as e:
         print(e)
-def get_content(url):
+def get_content(url,session_request,end):
     try:
         page = scraper.get(url,timeout=10)
         soup = BeautifulSoup(page.content, 'html5lib')
