@@ -15,7 +15,7 @@ logging.disable(logging.ERROR)
 logging.disable(logging.INFO)
 
 driver = None
-path = os.getcwd() + "\\chromedriver.exe"
+path = os.getcwd() + "\\required\\chromedriver.exe"
 
 def create_driver():
     global driver
@@ -108,11 +108,18 @@ def get_content(url,session_request,end):
                 myElem = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, 'manga-reading-nav-head')))
                 break
             except:
-                driver.delete_all_cookies()
-                wait_until(url,20,5)
+                if try_counter == 0:
+                    driver.delete_all_cookies()
+                    wait_until(url,20,5)
+                else:
+                    print("    --- restart drive")
+                    close_driver()
+                    create_driver()
+                    wait_until(url,20,5)
+                    print("")
+
                 try_counter = try_counter + 1
                 driver.refresh()
-
         if try_counter == 6:
             return False
         data = driver.page_source

@@ -33,6 +33,12 @@ website = {
     "www.fanfiction.net":"fanfiction",
     "wattpad.com":"wattpad",
     "www.wattpad.com":"wattpad",
+    "mtlnation.com":"mtlnation",
+    "www.mtlnation.com":"mtlnation",
+    "webnovel.com":"webnovel",
+    "www.webnovel.com":"webnovel",
+    "m.webnovel.com":"webnovel",
+    "www.readwn.com":"readwn",
 }
 lang = {
     "zh-CN":[
@@ -42,13 +48,13 @@ lang = {
     ],
     "en":[
         "www.wuxiaworld.site","wuxiaworld.site","www.ranobes.net","ranobes.net","www.novelfull.com","novelfull.com",
-        "fanfiction.net","www.fanfiction.net","wattpad.com","www.wattpad.com"
+        "fanfiction.net","www.fanfiction.net","wattpad.com","www.wattpad.com","mtlnation.com","www.mtlnation.com",
+        "webnovel.com","www.webnovel.com","m.webnovel.com","www.readwn.com"
     ],
     "ar":[
         "kolnovel.com"
     ]
 }
-
 class Accumulator:
     def light_novel(self):
         print("")
